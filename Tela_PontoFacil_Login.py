@@ -83,6 +83,10 @@ def alternar_senha():
         btn_olho.config(text="🙈")
         senha_visivel = True
             
+def abrir_TelaCriarUsuario():
+    root.withdraw()
+    TelaCriarUsuario.abrir(root)
+    
 root = tk.Tk()
 root.title("Ponto Fácil - Login")
 root.geometry("420x420")
@@ -158,10 +162,6 @@ lbl_mensagem.pack(pady=(5, 0))
 
 lbl_error = tk.Label(frame, text="", fg="red")
 lbl_error.pack(pady=(5, 0))
-
-def abrir_TelaCriarUsuario():
-    root.withdraw()
-    TelaCriarUsuario.abrir(root)
 
 btn_newuser = tk.Button(
     frame,
