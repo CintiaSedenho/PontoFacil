@@ -46,9 +46,8 @@ def login():
         # verifica SHA-256 antigo
         senha_sha256 = hashlib.sha256(senha.encode()).hexdigest()
 
-        if senha_sha256 == senha_hash:
-            # MIGRA automaticamente
-            novo_hash = hash_senha(senha)
+        if senha_sha256 == senha_hash:            
+            novo_hash = hash_senha(senha) # MIGRA automaticamente
 
             conn = sqlite3.connect(r"DB\pontofacil.db")
             cursor = conn.cursor()
