@@ -1,9 +1,15 @@
 import tkinter as tk
 from tkinter import messagebox
 import sqlite3
+import hashlib
+import os
 import TelaResetSenha
+import TelaCriarUsuario
 from TelaApontamento import TelaApontamento
 from HashSenha import hash_senha, verificar_senha
+
+# Configuração do caminho do banco de dados
+DB_PATH = os.path.join("DB", "pontofacil.db")
 
 def login():
     email = entry_email.get().strip()
@@ -17,7 +23,7 @@ def login():
         return
 
     try:
-        conn = sqlite3.connect(r"DB\pontofacil.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         cursor.execute(
@@ -49,7 +55,7 @@ def login():
         if senha_sha256 == senha_hash:            
             novo_hash = hash_senha(senha) # MIGRA automaticamente
 
-            conn = sqlite3.connect(r"DB\pontofacil.db")
+            conn = sqlite3.connect(DB_PATH)
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE usuarios SET senha = ? WHERE email = ?",
@@ -61,7 +67,7 @@ def login():
             TelaApontamento.abrir(root)
             root.withdraw()
         else:
-            lbl_msgm.config(text="Senha incorreta.")
+            lbl_msg.config(text="Senha incorreta.")
 
     except Exception as e:
         lbl_error.config(text=f"Erro: {e}")
@@ -157,8 +163,8 @@ btn_login = tk.Button(
 )
 btn_login.pack()
 
-lbl_mensagem = tk.Label(frame, text="", fg="red")
-lbl_mensagem.pack(pady=(5, 0))
+lbl_msg = tk.Label(frame, text="", fg="red")
+lbl_msg.pack(pady=(5, 0))
 
 lbl_error = tk.Label(frame, text="", fg="red")
 lbl_error.pack(pady=(5, 0))
@@ -173,6 +179,4 @@ btn_newuser = tk.Button(
 )
 btn_newuser.pack(pady=(8,0))
 
-root.mainloop()       
-btn_login.pack()
-root.mainloop()        
+root.mainloop()
