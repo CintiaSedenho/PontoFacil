@@ -1,13 +1,13 @@
 import sqlite3
 
-conn = sqlite3.connect("ponto_facil.db")
+conn = sqlite3.connect("pontofacil.db")
 cursor = conn.cursor()
 
-cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-tabelas = cursor.fetchall()
+cursor.execute("SELECT * FROM registros_ponto")
 
-print("Tabelas no banco:")
-for tabela in tabelas:
-    print("-", tabela[0])
+registros = cursor.fetchall()
+
+for r in registros:
+    print(r)
 
 conn.close()
