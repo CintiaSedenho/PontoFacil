@@ -102,7 +102,7 @@ root.title("Ponto Fácil - Login")
 root.geometry("420x420")
 root.resizable(False, False)
 
-frame = tk.Frame(root, padx=30, pady=30)
+frame = tk.Frame(root, padx=35, pady=30)
 frame.pack(expand=True)
 
 label_title = tk.Label(frame, text="Ponto Fácil", font=("Arial", 20, "bold"))
@@ -114,13 +114,13 @@ label_subtitle = tk.Label(
 label_subtitle.pack(pady=(0, 20))
 
 tk.Label(frame, text="E-mail").pack(anchor="w")
-entry_email = tk.Entry(frame)
+entry_email = tk.Entry(frame, width=35)
 entry_email.pack(fill="x", pady=(0, 15))
 
 tk.Label(frame, text="Senha").pack(anchor="w")
 campo_senha = tk.Frame(frame)
 campo_senha.pack(fill="x", pady=(0, 15))
-entry_senha = tk.Entry(campo_senha, show="*")
+entry_senha = tk.Entry(campo_senha, show="*", width=30)
 entry_senha.pack(side="left", fill="x", expand=True)
 
 btn_olho = tk.Button(
