@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
+from TelaHistorico import ver_historico
 import sqlite3
 import os
 
@@ -29,10 +30,27 @@ class TelaApontamento:
         )
         lbl_titulo.pack(side="left", padx=18, pady=16)
 
+        menu_opcoes = tk.Menu(janela, tearoff=0)
+        menu_opcoes.add_command(
+            label="Histórico",
+            command=lambda: ver_historico(janela, email_logado),
+        )
+        menu_opcoes.add_command(label="Sair", command=lambda: voltar())
+
+        def abrir_menu(event):
+            menu_opcoes.tk_popup(event.x_root, event.y_root)
+
         lbl_menu = tk.Label(
-            topo, text="☰", bg="#0f4c97", fg="white", font=("Arial", 16, "bold")
+            topo,
+            text="☰",
+            bg="#0f4c97",
+            fg="white",
+            font=("Arial", 18, "bold"),
+            cursor="hand2",
         )
         lbl_menu.pack(side="right", padx=18)
+
+        lbl_menu.bind("<Button-1>", abrir_menu)
 
         # CONTEÚDO PRINCIPAL
         conteudo = tk.Frame(janela, bg="#f3f4f6")
@@ -48,11 +66,16 @@ class TelaApontamento:
         lbl_bemvindo.pack(anchor="w", pady=(0, 6))
 
         lbl_colaborador = tk.Label(
-            conteudo, text="Colaborador", bg="#f3f4f6", fg="gray", font=("Arial", 11)
+            conteudo, text="Colaborador", bg="#f3f4f6", fg="gray", font=("Arial", 10)
         )
-        lbl_colaborador.pack(anchor="w", pady=(0, 16))
+        lbl_colaborador.pack(anchor="w", pady=(0, 0))
 
-        # CARD LOGO ABAIXO DO COLABORADOR
+        lbl_email = tk.Label(
+            conteudo, text=email_logado, bg="#f4f5f7", fg="gray", font=("Arial", 10)
+        )
+        lbl_email.pack(anchor="w", pady=(0, 5))
+
+        # CARD ABAIXO DO COLABORADOR
         card = tk.Frame(conteudo, bg="white", bd=1, relief="solid")
         card.pack(fill="x", pady=(0, 0))
 
@@ -100,7 +123,7 @@ class TelaApontamento:
                         email TEXT NOT NULL,
                         data TEXT NOT NULL,
                         hora TEXT NOT NULL,
-                        criado_em TEXT NOT NULL
+                        data_hora TEXT NOT NULL
                     )""")
                 cursor.execute(
                     """INSERT INTO registros_ponto (email, data, hora, data_hora) VALUES (?, ?, ?, ?)""",
@@ -110,12 +133,41 @@ class TelaApontamento:
                 conn.commit()
                 conn.close()
 
-                messagebox.showinfo("Sucesso", "Ponto registrado com sucesso!")
+                lbl_sucesso = tk.Label(
+                    card,
+                    text="Ponto registrado com sucesso!",
+                    bg="white",
+                    fg="green",
+                    font=("Arial", 11),
+                )
+                lbl_sucesso.pack(pady=(0, 10))
 
             except Exception as erro:
-                messagebox.showerror("Erro", f"Erro ao registrar ponto: {erro}")
+                lbl_erro = tk.Label(
+                    card,
+                    text=f"Erro ao registrar ponto: {erro}",
+                    bg="white",
+                    fg="red",
+                    font=("Arial", 11),
+                )
+                lbl_erro.pack(pady=(0, 10))
 
         btn_registrar.config(command=registrar_ponto)
 
         def abrir(root, email_logado):
             pass
+
+        def voltar():
+            janela.destroy()
+            janela_login.deiconify()
+
+        btn_voltar = tk.Button(
+            conteudo,
+            text="Voltar",
+            fg="#1a73e8",
+            bd=0,
+            cursor="hand2",
+            command=voltar,
+        )
+        btn_voltar.pack(pady=10)
+
