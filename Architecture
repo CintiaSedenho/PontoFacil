@@ -1,0 +1,19 @@
+PontoFacilWeb/
+
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── auth.py
+│   └── DB/
+│       └── pontofacil.db
+│
+├── frontend/
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Cadastro.jsx
+│   │   │   └── Apontamento.jsx
+│   │   └── App.jsx
+│   │
+│   └── package.json
