@@ -6,10 +6,9 @@ Frontend (React)
 ↓
 API (FastAPI)
 ↓
-SQLite/PostgreSQL
+SQLite
 
 ## Tecnologias
 - React
 - FastAPI
-- SQLAlchemy
 - SQLite
