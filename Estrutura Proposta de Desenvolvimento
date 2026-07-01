@@ -1,0 +1,36 @@
+PontoFacil/
+│
+├── app/
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── auth.py
+│   │
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   ├── routers/
+│   ├── utils/
+│   │
+│   ├── templates/
+│   │      base.html
+│   │      login.html
+│   │      usuario_novo.html
+│   │      reset_senha.html
+│   │      apontamento.html
+│   │      historico.html
+│   │      espelho.html
+│   │
+│   └── static/
+│        ├── css/
+│        ├── js/
+│        ├── img/
+│        ├── icons/
+│        └── manifest.json
+│
+├── DB/
+│      pontofacil.db
+│
+├── requirements.txt
+├── README.md
+└── run.py
