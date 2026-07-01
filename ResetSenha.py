@@ -1,85 +1,175 @@
-import tkinter as tk
-from tkinter import messagebox
+from datetime import datetime, timedelta
+import secrets
 
-def abrir(janela_login):
-    janela = tk.Toplevel(janela_login)
-    janela.title("Ponto Fácil - Redefinir Senha")
-    janela.geometry("420x420")
-    janela.resizable(False, False)
-    janela.configure(bg="#f5f6f8")
+from fastapi import APIRouter, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
 
-    def cancelar():
-        janela.destroy()
-        janela_login.deiconify()
+from passlib.context import CryptContext
 
-    def redefinir():
-        email = entry_email.get()
+from database import get_connection
 
-        if not email:
-            messagebox.showwarning("Atenção", "Informe seu e-mail.")
-            return
+router = APIRouter()
 
-        # Aqui futuramente entra a lógica (token + banco + email)
-        lbl_sucesso.config(text="✔ E-mail enviado com sucesso")
-        lbl_sucesso.pack(pady=(15, 0))
+templates = Jinja2Templates(directory="templates")
 
-    # Container central (card)
-    card = tk.Frame(janela, bg="white", bd=0)
-    card.place(relx=0.5, rely=0.45, anchor="center", width=360, height=260)
+pwd_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto"
+)
 
-    # Título
-    tk.Label(
-        card,
-        text="Redefinir senha",
-        font=("Arial", 14, "bold"),
-        bg="white"
-    ).pack(pady=(20, 5))
+# ---------------------------------------------------
+# Tela
+# ---------------------------------------------------
 
-    # Subtítulo
-    tk.Label(
-        card,
-        text="Enviaremos um link para seu e-mail",
-        font=("Arial", 9),
-        fg="gray",
-        bg="white"
-    ).pack(pady=(0, 15))
+@router.get("/reset-senha", response_class=HTMLResponse)
+async def tela_reset(request: Request):
 
-    # Email label
-    tk.Label(
-        card,   
-        anchor="w",
-        bg="white"
-    ).pack(fill="x", padx=25)
+    return templates.TemplateResponse(
+        "reset_senha.html",
+        {
+            "request": request
+        }
+    )
 
-    # Email entry
-    entry_email = tk.Entry(card, width=35)
-    entry_email.pack(padx=25, pady=(5, 20))
 
-    # Botões
-    btn_frame = tk.Frame(card, bg="white")
-    btn_frame.pack(pady=(5, 0))
+# ---------------------------------------------------
+# Enviar solicitação
+# ---------------------------------------------------
 
-    tk.Button(
-        btn_frame,
-        text="Cancelar",
-        width=14,
-        command=cancelar
-    ).pack(side="left", padx=5)
+@router.post("/reset-senha")
+async def solicitar_reset(email: str = Form(...)):
 
-    tk.Button(
-        btn_frame,
-        text="Redefinir senha",
-        width=18,
-        bg="#1a73e8",
-        fg="white",
-        command=redefinir
-    ).pack(side="left", padx=5)
+    conn = get_connection()
+    cursor = conn.cursor()
 
-    # Mensagem de sucesso (oculta inicialmente)
-    lbl_sucesso = tk.Label(
-        janela,
-        text="",
-        fg="green",
-        bg="#f5f6f8",
-        font=("Arial", 10, "bold")
+    cursor.execute("""
+        SELECT id
+        FROM usuarios
+        WHERE email=?
+    """, (email,))
+
+    usuario = cursor.fetchone()
+
+    if usuario is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Usuário não encontrado."
+        )
+
+    token = secrets.token_urlsafe(32)
+
+    expiracao = datetime.now() + timedelta(minutes=30)
+
+    cursor.execute("""
+        UPDATE usuarios
+        SET reset_token=?,
+            reset_expira=?
+        WHERE email=?
+    """, (
+        token,
+        expiracao,
+        email
+    ))
+
+    conn.commit()
+    conn.close()
+
+    # futuramente enviar por e-mail
+
+    return {
+        "mensagem": "Token gerado.",
+        "token": token
+    }
+
+
+# ---------------------------------------------------
+# Tela nova senha
+# ---------------------------------------------------
+
+@router.get("/nova-senha/{token}", response_class=HTMLResponse)
+async def tela_nova_senha(request: Request, token: str):
+
+    return templates.TemplateResponse(
+        "nova_senha.html",
+        {
+            "request": request,
+            "token": token
+        }
+    )
+
+
+# ---------------------------------------------------
+# Alterar senha
+# ---------------------------------------------------
+
+@router.post("/nova-senha")
+async def alterar_senha(
+
+        token: str = Form(...),
+        senha: str = Form(...),
+        confirmar: str = Form(...)
+):
+
+    if senha != confirmar:
+
+        raise HTTPException(
+            status_code=400,
+            detail="As senhas não conferem."
+        )
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+
+        SELECT id, reset_expira
+
+        FROM usuarios
+
+        WHERE reset_token=?
+
+    """, (token,))
+
+    usuario = cursor.fetchone()
+
+    if usuario is None:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Token inválido."
+        )
+
+    expira = datetime.fromisoformat(usuario[1])
+
+    if datetime.now() > expira:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Token expirado."
+        )
+
+    senha_hash = pwd_context.hash(senha)
+
+    cursor.execute("""
+
+        UPDATE usuarios
+
+        SET senha=?,
+            reset_token=NULL,
+            reset_expira=NULL
+
+        WHERE id=?
+
+    """, (
+        senha_hash,
+        usuario[0]
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return RedirectResponse(
+        url="/login",
+        status_code=303
     )
