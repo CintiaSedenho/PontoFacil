@@ -6,7 +6,7 @@ Frontend (React)
 ↓
 API (FastAPI)
 ↓
-SQLite
+SQL
 
 ## Tecnologias
 - React
