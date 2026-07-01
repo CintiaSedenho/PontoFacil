@@ -1,14 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
-import sqlite3
+from database import conectar
 
 from auth import get_current_user
 
-router = APIRouter(
-    prefix="/apontamento",
-    tags=["Apontamento"]
-)
+router = APIRouter(prefix="/apontamento", tags=["Apontamento"])
 
 DATABASE = "database/pontofacil.db"
 
@@ -18,29 +15,18 @@ class RegistroPonto(BaseModel):
 
 
 def conectar():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
+    conn = conectar()
+    cursor = conn.cursor(dictionary=True)
     return conn
 
 
 @router.post("/")
-def registrar_ponto(
-    registro: RegistroPonto,
-    usuario=Depends(get_current_user)
-):
+def registrar_ponto(registro: RegistroPonto, usuario=Depends(get_current_user)):
 
-    tipos_validos = [
-        "ENTRADA",
-        "SAIDA_ALMOCO",
-        "RETORNO_ALMOCO",
-        "SAIDA"
-    ]
+    tipos_validos = ["ENTRADA", "SAIDA_ALMOCO", "RETORNO_ALMOCO", "SAIDA"]
 
     if registro.tipo not in tipos_validos:
-        raise HTTPException(
-            status_code=400,
-            detail="Tipo de registro inválido."
-        )
+        raise HTTPException(status_code=400, detail="Tipo de registro inválido.")
 
     conn = conectar()
     cursor = conn.cursor()
@@ -48,7 +34,8 @@ def registrar_ponto(
     data = datetime.now().strftime("%Y-%m-%d")
     hora = datetime.now().strftime("%H:%M:%S")
 
-    cursor.execute("""
+    cursor.execute(
+        """
 
         INSERT INTO apontamentos
         (
@@ -60,16 +47,12 @@ def registrar_ponto(
 
         VALUES
         (
-            ?, ?, ?, ?
+            %s, %s, %s, %s
         )
 
     """,
-    (
-        usuario["id"],
-        data,
-        hora,
-        registro.tipo
-    ))
+        (usuario["id"], data, hora, registro.tipo),
+    )
 
     conn.commit()
     conn.close()
@@ -77,21 +60,20 @@ def registrar_ponto(
     return {
         "mensagem": "Ponto registrado com sucesso.",
         "tipo": registro.tipo,
-        "hora": hora
+        "hora": hora,
     }
 
 
 @router.get("/hoje")
-def listar_pontos_hoje(
-    usuario=Depends(get_current_user)
-):
+def listar_pontos_hoje(usuario=Depends(get_current_user)):
 
     conn = conectar()
     cursor = conn.cursor()
 
     hoje = datetime.now().strftime("%Y-%m-%d")
 
-    cursor.execute("""
+    cursor.execute(
+        """
 
         SELECT
             hora,
@@ -99,16 +81,14 @@ def listar_pontos_hoje(
 
         FROM apontamentos
 
-        WHERE usuario_id=?
-        AND data=?
+        WHERE usuario_id=%s
+        AND data=%s
 
         ORDER BY hora
 
     """,
-    (
-        usuario["id"],
-        hoje
-    ))
+        (usuario["id"], hoje),
+    )
 
     registros = cursor.fetchall()
 
@@ -118,14 +98,13 @@ def listar_pontos_hoje(
 
 
 @router.get("/historico")
-def historico(
-    usuario=Depends(get_current_user)
-):
+def historico(usuario=Depends(get_current_user)):
 
     conn = conectar()
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
 
         SELECT
 
@@ -135,14 +114,19 @@ def historico(
 
         FROM apontamentos
 
-        WHERE usuario_id=?
+        WHERE usuario_id=%s
 
         ORDER BY data DESC, hora DESC
 
     """,
-    (usuario["id"],))
+        (usuario["id"],),
+    )
 
     dados = cursor.fetchall()
+
+    conn.close()
+
+    return dados
 
     conn.close()
 
