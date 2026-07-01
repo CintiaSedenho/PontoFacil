@@ -11,4 +11,4 @@ SQLite
 ## Tecnologias
 - React
 - FastAPI
-- SQLite
+- MySQL
