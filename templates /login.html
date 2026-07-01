@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ponto Fácil</title>
+
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <h1>Ponto Fácil</h1>
+
+    <p class="subtitle">
+        Sistema de Controle de Ponto
+    </p>
+
+    <form action="/login" method="post">
+
+        <label>E-mail</label>
+
+        <input
+            type="email"
+            name="email"
+            required
+        >
+
+        <label>Senha</label>
+
+        <div class="password">
+
+            <input
+                type="password"
+                id="senha"
+                name="senha"
+                required
+            >
+
+            <button
+                type="button"
+                onclick="mostrarSenha()"
+                class="eye">
+                    👁
+            </button>
+
+        </div>
+
+        <a href="/reset" class="forgot">
+            Esqueceu a senha?
+        </a>
+
+        <button class="btn">
+            Entrar
+        </button>
+
+    </form>
+
+    <a href="/cadastro" class="register">
+        Criar uma nova conta
+    </a>
+
+</div>
+
+<script>
+
+function mostrarSenha(){
+
+    let senha = document.getElementById("senha");
+
+    senha.type =
+        senha.type==="password"
+        ? "text"
+        : "password";
+}
+
+</script>
+
+</body>
+</html>
