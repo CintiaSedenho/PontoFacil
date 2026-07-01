@@ -1,21 +1,19 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
-import sqlite3
+from database import conectar
 from passlib.context import CryptContext
 
 router = APIRouter()
 
 DATABASE = "banco/pontofacil.db"
 
-pwd_context = CryptContext(
-    schemes=["argon2"],
-    deprecated="auto"
-)
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 
 # ============================
 # Modelos
 # ============================
+
 
 class CriarUsuarioRequest(BaseModel):
     nome: str
@@ -32,22 +30,23 @@ class CriarUsuarioResponse(BaseModel):
 # Cadastro
 # ============================
 
-@router.post(
-    "/criar_usuario",
-    response_model=CriarUsuarioResponse
-)
+
+@router.post("/criar_usuario", response_model=CriarUsuarioResponse)
 def criar_usuario(dados: CriarUsuarioRequest):
 
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
+    conn = conectar()
+    cursor = conn.cursor(dictionary=True)
 
     # verifica se email existe
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT id
         FROM usuarios
-        WHERE email=?
-    """, (dados.email,))
+        WHERE email=%s
+    """,
+        (dados.email,),
+    )
 
     usuario = cursor.fetchone()
 
@@ -55,14 +54,12 @@ def criar_usuario(dados: CriarUsuarioRequest):
 
         conn.close()
 
-        raise HTTPException(
-            status_code=400,
-            detail="E-mail já cadastrado."
-        )
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado.")
 
     senha_hash = pwd_context.hash(dados.senha)
 
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO usuarios
         (
             nome,
@@ -70,18 +67,12 @@ def criar_usuario(dados: CriarUsuarioRequest):
             senha
         )
         VALUES
-        (?, ?, ?)
+        (%s, %s, %s)
     """,
-    (
-        dados.nome,
-        dados.email,
-        senha_hash
-    ))
+        (dados.nome, dados.email, senha_hash),
+    )
 
     conn.commit()
     conn.close()
 
-    return CriarUsuarioResponse(
-        sucesso=True,
-        mensagem="Usuário criado com sucesso."
-    )
+    return CriarUsuarioResponse(sucesso=True, mensagem="Usuário criado com sucesso.")
